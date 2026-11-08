@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Тетріс: графік відключень</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0c1220;--card:#18202f;--cardb:#222c40;--empty:#111827;--line:#0a0f1a;--full:#2c3548;--txt:#f1f4fa;--mut:#8b96ab;--yel:#f7c52b;--c:20px;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;touch-action:none}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;padding:8px 8px 6px;gap:8px}
+h1{margin:0;font-size:15px;font-weight:600;align-self:flex-start;color:#e4e9f3}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;width:calc(var(--c)*11.7)}
+.st{background:var(--card);border:1px solid var(--cardb);border-radius:10px;padding:6px 8px;text-align:center;min-height:46px}
+.st small{display:block;font-size:11px;color:var(--mut)}
+.st b{font-size:20px;font-weight:700}
+.nx{width:62px;display:flex;flex-direction:column;align-items:center}
+#next{display:grid;gap:1px;margin-top:3px}
+#next i{width:9px;height:9px;border-radius:2px}
+#next i.o{background:var(--yel)}
+.wrap{position:relative}
+#grid{display:grid;grid-template-columns:calc(var(--c)*1.7) repeat(10,var(--c));background:var(--card);border:1px solid var(--cardb);border-radius:6px;padding:0 0 1px}
+.h,.t{height:var(--c);display:flex;align-items:center;justify-content:center;font-size:calc(var(--c)*.5);color:var(--mut);font-weight:600;white-space:nowrap}
+.h{color:#cfd6e4}
+.t{color:#aab3c6}
+.cell{height:var(--c);background:var(--empty);border:1px solid var(--line);border-radius:3px;background-repeat:no-repeat;background-position:center;background-size:70%}
+.cell.f{background-color:var(--full);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 5 14h6l-1 8 9-12h-6z' fill='white'/%3E%3Cpath d='M3 3 21 21' stroke='%232c3548' stroke-width='5'/%3E%3Cpath d='M3 3 21 21' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E")}
+.cell.a{background-color:#1d2536;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 5 14h6l-1 8 9-12h-6z' fill='%23f7c52b'/%3E%3C/svg%3E")}
+.cell.g{box-shadow:inset 0 0 0 1px #3a4560}
+.cell.c{background-color:#fff;animation:fl .25s}
+@keyframes fl{from{opacity:1}to{opacity:.3}}
+#ov{position:absolute;inset:0;background:rgba(8,12,22,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;border-radius:6px;padding:16px}
+#ov.on{display:flex}
+#ov h2{margin:0;font-size:20px}
+#ov p{margin:0;color:var(--mut);font-size:14px;line-height:1.4}
+button{font:inherit;color:var(--txt);background:var(--cardb);border:1px solid #2f3b54;border-radius:12px;cursor:pointer}
+button:active{background:#34415e}
+#go{background:var(--yel);color:#1a1405;border:0;font-weight:700;padding:11px 22px;font-size:15px}
+.ctl{display:flex;gap:8px;width:calc(var(--c)*11.7)}
+.ctl button{flex:1;height:48px;font-size:22px}
+#pz{flex:.7}
+.au{font-size:12px;color:var(--mut)}
+.au a{color:var(--yel);text-decoration:none;font-weight:600}
+#sh{display:none;padding:11px 22px;font-size:15px;font-weight:600}
+:focus-visible{outline:2px solid var(--yel);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1 id="ttl">Тетріс: графік відключень</h1>
+  <div class="stats">
+    <div class="st"><small>Рахунок</small><b id="sc">0</b></div>
+    <div class="st"><small>Рядки</small><b id="ln">0</b></div>
+    <div class="st"><small>Рівень</small><b id="lv">1</b></div>
+    <div class="st nx"><small>Далі</small><div id="next"></div></div>
+  </div>
+  <div class="wrap">
+    <div id="grid"></div>
+    <div id="ov" class="on"><h2 id="ovt">Тетріс</h2><p id="ovp">Складайте блоки в рядки.<br>Торкніться — повернути, тягніть — рухати, свайп вниз — скинути.</p><button id="go">Грати</button></div>
+  </div>
+  <div class="ctl">
+    <button id="bl" aria-label="Ліворуч">◀</button>
+    <button id="br" aria-label="Праворуч">▶</button>
+    <button id="bro" aria-label="Повернути">⟳</button>
+    <button id="bd" aria-label="Вниз">▼</button>
+    <button id="bh" aria-label="Скинути">⤓</button>
+    <button id="pz" aria-label="Пауза">⏸</button>
+  </div>
+</div>
+<script>
+// ===== НАЛАШТУВАННЯ: замініть на свої дані =====
+const AUTHOR_NICK='@mr_parom';                         // ваш нік у Telegram без @
+const GAME_URL='https://t.me/імя_бота/коротке_імя';   // посилання на гру в Telegram
+// ===============================================
+const AUTHOR_URL='https://t.me/'+AUTHOR_NICK;
+function openTg(u){try{if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink){Telegram.WebApp.openTelegramLink(u);return}}catch(e){}window.open(u,'_blank')}
+document.getElementById('app').insertAdjacentHTML('beforeend','<div class="au">Автор: <a id="au" href="'+AUTHOR_URL+'">@'+AUTHOR_NICK+'</a></div>');
+document.getElementById('au').addEventListener('click',e=>{e.preventDefault();openTg(AUTHOR_URL)});
+document.getElementById('go').insertAdjacentHTML('afterend','<button id="sh">Поділитись результатом</button>');
+document.getElementById('sh').addEventListener('click',()=>{
+  const txt='⚡ Я набрав '+score+' очок у Тетрісі «графік відключень» ('+lines+' рядків). Спробуй перевершити! Автор: @'+AUTHOR_NICK;
+  openTg('https://t.me/share/url?url='+encodeURIComponent(GAME_URL)+'&text='+encodeURIComponent(txt));
+});
+const R=24,C=10;
+const SH=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];
+const $=id=>document.getElementById(id);
+const tg=window.Telegram&&Telegram.WebApp;
+try{if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#0c1220');tg.setBackgroundColor&&tg.setBackgroundColor('#0c1220');tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}}catch(e){}
+const hap=t=>{try{tg&&tg.HapticFeedback&&tg.HapticFeedback.impactOccurred(t||'light')}catch(e){}};
+$('ttl').textContent='Тетріс: графік відключень на '+new Date().toLocaleDateString('uk',{day:'numeric',month:'long'});
+
+// build grid
+const g=$('grid'),cells=[];
+g.innerHTML='<div class="h" style="font-size:calc(var(--c)*.38)">Час/Гр.</div>'+['1.1','1.2','2.1','2.2','3.1','3.2','4.1','4.2','5.1','5.2'].map(x=>'<div class="h">'+x+'</div>').join('');
+for(let r=0;r<R;r++){
+  const p=n=>String(n).padStart(2,'0');
+  const l=document.createElement('div');l.className='t';l.textContent=p(r)+'-'+p(r+1);g.appendChild(l);
+  for(let c=0;c<C;c++){const d=document.createElement('div');d.className='cell';g.appendChild(d);cells.push(d)}
+}
+function fit(){
+  const W=innerWidth,H=innerHeight;
+  const c=Math.max(12,Math.min((W-16)/11.7,(H-215)/25));
+  document.documentElement.style.setProperty('--c',c+'px');
+}
+addEventListener('resize',fit);fit();
+
+let board,pc,nx,score,lines,level,state='idle',last=0,acc=0,best=0;
+try{best=+localStorage.getItem('tt-best')||0}catch(e){}
+const rnd=()=>SH[Math.random()*7|0].map(r=>r.slice());
+const rot=m=>m[0].map((_,i)=>m.map(r=>r[i]).reverse());
+function hit(m,x,y){
+  for(let j=0;j<m.length;j++)for(let i=0;i<m[0].length;i++)if(m[j][i]){
+    const X=x+i,Y=y+j;
+    if(X<0||X>=C||Y>=R||(Y>=0&&board[Y][X]))return true;
+  }
+  return false;
+}
+function spawn(){
+  const m=nx||rnd();nx=rnd();
+  pc={m,x:(C-m[0].length)>>1,y:0};
+  drawNext();
+  if(hit(pc.m,pc.x,pc.y))end();
+}
+function drawNext(){
+  const n=$('next');n.style.gridTemplateColumns='repeat('+nx[0].length+',9px)';
+  n.innerHTML=nx.map(r=>r.map(v=>'<i class="'+(v?'o':'')+'"></i>').join('')).join('');
+}
+function ghostY(){let y=pc.y;while(!hit(pc.m,pc.x,y+1))y++;return y}
+function draw(flash){
+  const on=new Set(),gh=new Set();
+  if(pc&&state!=='idle'){
+    const gy=ghostY();
+    pc.m.forEach((row,j)=>row.forEach((v,i)=>{if(v){on.add((pc.y+j)*C+pc.x+i);gh.add((gy+j)*C+pc.x+i)}}));
+  }
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const k=r*C+c,d=cells[k];
+    let s='cell';
+    if(flash&&flash.includes(r))s+=' c';
+    else if(on.has(k))s+=' a';
+    else if(board[r][c])s+=' f';
+    else if(gh.has(k))s+=' g';
+    if(d.className!==s)d.className=s;
+  }
+}
+function stats(){
+  $('sc').textContent=score;$('ln').textContent=lines;$('lv').textContent=level;
+}
+function lock(){
+  pc.m.forEach((row,j)=>row.forEach((v,i)=>{if(v&&pc.y+j>=0)board[pc.y+j][pc.x+i]=1}));
+  const full=[];
+  board.forEach((r,i)=>{if(r.every(Boolean))full.push(i)});
+  if(full.length){
+    state='clear';hap('medium');draw(full);
+    setTimeout(()=>{
+      full.forEach(i=>{board.splice(i,1);board.unshift(Array(C).fill(0))});
+      score+=[0,100,300,500,800][full.length]*level;
+      lines+=full.length;level=1+(lines/10|0);
+      stats();state='play';spawn();draw();
+    },260);
+  }else{hap('light');spawn()}
+}
+function move(dx){if(state!=='play')return;if(!hit(pc.m,pc.x+dx,pc.y)){pc.x+=dx;draw()}}
+function turn(){
+  if(state!=='play')return;
+  const m=rot(pc.m);
+  for(const k of [0,-1,1,-2,2])if(!hit(m,pc.x+k,pc.y)){pc.m=m;pc.x+=k;draw();return}
+}
+function down(manual){
+  if(state!=='play')return;
+  if(!hit(pc.m,pc.x,pc.y+1)){pc.y++;if(manual)score++;draw()}else lock();
+  stats();
+}
+function drop(){
+  if(state!=='play')return;
+  const y=ghostY();score+=2*(y-pc.y);pc.y=y;draw();lock();stats();
+}
+function end(){
+  state='over';
+  if(score>best){best=score;try{localStorage.setItem('tt-best',best)}catch(e){}}
+  $('ovt').textContent='Світло вимкнено';
+  $('ovp').innerHTML='Рахунок: '+score+'<br>Рядки: '+lines+'<br>Рекорд: '+best;
+  $('go').textContent='Ще раз';$('sh').style.display='block';$('ov').classList.add('on');
+  try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('error')}catch(e){}
+}
+function start(){
+  board=Array.from({length:R},()=>Array(C).fill(0));
+  score=0;lines=0;level=1;nx=null;acc=0;state='play';
+  $('ov').classList.remove('on');stats();spawn();draw();
+}
+function pause(){
+  if(state==='play'){state='pause';$('ovt').textContent='Пауза';$('ovp').textContent='Світло тимчасово є.';$('go').textContent='Продовжити';$('ov').classList.add('on')}
+}
+$('go').onclick=()=>{$('sh').style.display='none';if(state==='pause'){state='play';$('ov').classList.remove('on')}else start()};
+$('pz').onclick=pause;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+
+// loop
+function tick(t){
+  const dt=t-last;last=t;
+  if(state==='play'){
+    acc+=dt;const iv=Math.max(90,800-(level-1)*70);
+    while(acc>=iv&&state==='play'){acc-=iv;down(false)}
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(t=>{last=t;tick(t)});
+
+// buttons with hold-repeat
+function hold(id,fn){
+  const b=$(id);let t1,t2;
+  const stop=()=>{clearTimeout(t1);clearInterval(t2)};
+  b.addEventListener('pointerdown',e=>{e.preventDefault();fn();stop();t1=setTimeout(()=>{t2=setInterval(fn,75)},200)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+}
+hold('bl',()=>move(-1));hold('br',()=>move(1));hold('bd',()=>down(true));
+$('bro').onclick=turn;$('bh').onclick=drop;
+
+// keyboard
+addEventListener('keydown',e=>{
+  const k=e.key;
+  if(k==='ArrowLeft')move(-1);else if(k==='ArrowRight')move(1);
+  else if(k==='ArrowDown')down(true);else if(k==='ArrowUp'||k==='x')turn();
+  else if(k===' '){e.preventDefault();drop()}
+  else if(k==='p'||k==='Escape')pause();
+  else if(k==='Enter'&&state!=='play'&&state!=='clear')$('go').click();
+  else return;
+  e.preventDefault();
+});
+
+// swipe on board
+let sx,sy,st,cx,moved;
+g.addEventListener('pointerdown',e=>{sx=cx=e.clientX;sy=e.clientY;st=Date.now();moved=false});
+g.addEventListener('pointermove',e=>{
+  if(sx==null)return;
+  const cw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
+  while(e.clientX-cx>cw){move(1);cx+=cw;moved=true}
+  while(cx-e.clientX>cw){move(-1);cx-=cw;moved=true}
+});
+g.addEventListener('pointerup',e=>{
+  if(sx==null)return;
+  const dy=e.clientY-sy,dt=Date.now()-st;
+  if(dy>60&&dt<350&&Math.abs(e.clientX-sx)<40)drop();
+  else if(!moved&&Math.abs(dy)<10&&dt<250)turn();
+  sx=null;
+});
+
+board=Array.from({length:R},()=>Array(C).fill(0));
+draw();
+</script>
+</body>
+</html>
