@@ -39,8 +39,7 @@ button{font:inherit;color:var(--txt);background:var(--cardb);border:1px solid #2
 button:active{background:#34415e}
 #go{background:var(--yel);color:#1a1405;border:0;font-weight:700;padding:11px 22px;font-size:15px}
 .ctl{display:flex;gap:8px;width:calc(var(--c)*11.7)}
-.ctl button{flex:1;height:48px;font-size:22px}
-#pz{flex:.7}
+.ctl button{flex:1 1 0;min-width:0;padding:0;height:48px;font-size:22px}
 .au{font-size:12px;color:var(--mut)}
 .au a{color:var(--yel);text-decoration:none;font-weight:600}
 #sh{display:none;padding:11px 22px;font-size:15px;font-weight:600}
@@ -72,7 +71,7 @@ button:active{background:#34415e}
 <script>
 // ===== НАЛАШТУВАННЯ: замініть на свої дані =====
 const AUTHOR_NICK='mr_parom';                         // ваш нік у Telegram без @
-const GAME_URL='https://t.me/імя_бота/коротке_імя';   // посилання на гру в Telegram
+const GAME_URL='https://t.me/svitlo_tetris_bot/tetris';   // посилання на гру в Telegram
 // ===============================================
 const AUTHOR_URL='https://t.me/'+AUTHOR_NICK;
 function openTg(u){try{if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openTelegramLink){Telegram.WebApp.openTelegramLink(u);return}}catch(e){}window.open(u,'_blank')}
@@ -194,7 +193,7 @@ function pause(){
 }
 $('go').onclick=()=>{$('sh').style.display='none';if(state==='pause'){state='play';$('ov').classList.remove('on')}else start()};
 $('pz').onclick=pause;
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+
 
 // loop
 function tick(t){
