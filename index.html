@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Тетріс: графік відключень</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script data-goatcounter="https://svitlo.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <style>
 :root{color-scheme:dark;--bg:#0c1220;--card:#18202f;--cardb:#222c40;--empty:#111827;--line:#0a0f1a;--full:#2c3548;--txt:#f1f4fa;--mut:#8b96ab;--yel:#f7c52b;--c:20px;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -80,8 +81,9 @@ document.getElementById('au').addEventListener('click',e=>{e.preventDefault();op
 document.getElementById('go').insertAdjacentHTML('afterend','<button id="sh">Поділитись результатом</button>');
 document.getElementById('sh').addEventListener('click',()=>{
   const txt='⚡ Я набрав '+score+' очок у Тетрісі «графік відключень» ('+lines+' рядків). Спробуй перевершити! Автор: @'+AUTHOR_NICK;
-  openTg('https://t.me/share/url?url='+encodeURIComponent(GAME_URL)+'&text='+encodeURIComponent(txt));
+  track('share','Поділились');openTg('https://t.me/share/url?url='+encodeURIComponent(GAME_URL)+'&text='+encodeURIComponent(txt));
 });
+function track(n,t){try{if(window.goatcounter&&goatcounter.count)goatcounter.count({path:n,title:t,event:true})}catch(e){}}
 const R=24,C=10;
 const SH=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];
 const $=id=>document.getElementById(id);
@@ -178,14 +180,14 @@ function drop(){
 function end(){
   state='over';
   if(score>best){best=score;try{localStorage.setItem('tt-best',best)}catch(e){}}
-  $('ovt').textContent='Світло вимкнено';
+  track('gameover','Гра закінчилась');$('ovt').textContent='Світло вимкнено';
   $('ovp').innerHTML='Рахунок: '+score+'<br>Рядки: '+lines+'<br>Рекорд: '+best;
   $('go').textContent='Ще раз';$('sh').style.display='block';$('ov').classList.add('on');
   try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred('error')}catch(e){}
 }
 function start(){
   board=Array.from({length:R},()=>Array(C).fill(0));
-  score=0;lines=0;level=1;nx=null;acc=0;state='play';
+  score=0;lines=0;level=1;nx=null;acc=0;state='play';track('start','Гра почалась');
   $('ov').classList.remove('on');stats();spawn();draw();
 }
 function pause(){
